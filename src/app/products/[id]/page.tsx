@@ -1,27 +1,27 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import useSWR from 'swr';
 import { useParams } from 'next/navigation';
 
 interface Product {
   id: string;
   name: string;
   description: string;
-  // Add more fields as needed
+  // Add more fields if your product has them
 }
+
+const fetcher = (url: string): Promise<Product> =>
+  fetch(url).then((res) => res.json());
 
 export default function ProductPage() {
   const { id } = useParams<{ id: string }>();
-  const [product, setProduct] = useState<Product | null>(null);
 
-  useEffect(() => {
-    if (id) {
-      fetch(`/api/products/${id}`)
-        .then((res) => res.json())
-        .then((data: Product) => setProduct(data));
-    }
-  }, [id]);
+  const { data: product, error } = useSWR(
+    id ? `/api/products/${id}` : null,
+    fetcher
+  );
 
+  if (error) return <div>Failed to load</div>;
   if (!product) return <div>Loading...</div>;
 
   return (
